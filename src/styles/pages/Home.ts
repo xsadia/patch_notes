@@ -7,10 +7,22 @@ export const Container = styled.div`
   align-items: center;
   justify-content: center;
   text-align: center;
-`;
 
-export const Title = styled.h1`
-  font-size: 32px;
-  font-weight: bold;
-  font-family: sans-serif;
+  form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 380px;
+    height: 100%;
+    max-height: 420px;
+    background: #1A202C;
+    padding: 74px;
+    border-radius: 4%;
+
+    label {
+      font-size: 24px;
+    }
+  }
 `;

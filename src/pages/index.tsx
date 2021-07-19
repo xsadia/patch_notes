@@ -12,9 +12,9 @@ export default function Home() {
       <Container>
         <form >
           <label htmlFor="email">E-mail</label>
-          <Input id="email" name="email" type="email" />
+          <Input id="email" placeholder="E-mail" name="email" type="email" />
           <label htmlFor="email">Password</label>
-          <Input id="email" name="password" type="password" />
+          <Input id="email" placeholder="password" name="password" type="password" />
           <Button>Entrar</Button>
         </form>
       </Container>

@@ -19,6 +19,7 @@ export default createGlobalStyle`
   body {
     background: var(--gray-900);
     color: var(--gray-50);
+    overflow-x: hidden;
 
   }
 

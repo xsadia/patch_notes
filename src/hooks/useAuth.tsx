@@ -18,7 +18,7 @@ type AuthContextData = {
   signIn(credentials: SignInCredentials): Promise<void>;
   signOut(): void;
   isAuthenticated: boolean;
-  user: User;
+  user: User | undefined;
 };
 
 type AuthProviderProps = {
@@ -28,7 +28,7 @@ type AuthProviderProps = {
 const AuthContext = createContext({} as AuthContextData);
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>();
+  const [user, setUser] = useState<User | undefined>();
   const isAuthenticated = !!user;
 
   useEffect(() => {

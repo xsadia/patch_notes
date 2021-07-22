@@ -138,6 +138,14 @@ export const PostBody = styled.main`
   margin: 0 auto;
   max-width: 960px;
 
+  font-size: 18px;
+    line-height: 130%;
+
+    background: var(--gray-800);
+    padding: 24px;
+    border-radius: 8px;
+
+
   animation: 1s ease-out 0s 1 slideFromLeft;
 
   @keyframes slideFromLeft {
@@ -174,14 +182,8 @@ export const PostBody = styled.main`
     }
   }
 
-  p {
-    font-size: 18px;
-    line-height: 130%;
 
-    background: var(--gray-800);
-    padding: 24px;
-    border-radius: 8px;
-  }
+
 
   h1 {
     margin-bottom: 10px;

@@ -1,22 +1,102 @@
 import { Header } from "components/Header";
 import { FiArrowLeft } from 'react-icons/fi';
-import { GoTrashcan } from 'react-icons/go';
+import { BiTrash } from 'react-icons/bi';
+import { ImSpinner } from 'react-icons/im';
+import { AiOutlineLike, AiFillLike } from 'react-icons/ai';
 import Head from 'next/head';
-import { PostBody, BackButton, CommentContainer, PostBodyContainer, Comment, SendButtonContainer, CommentBody, PostHeaderContainer, PostHeaderInfoContainer } from '../../styles/pages/Posts';
+import { PostBody, BackButton, CommentContainer, PostBodyContainer, Comment, SendButtonContainer, CommentBody, PostHeaderContainer, PostHeaderInfoContainer, NoComment, CommentForm, DeleteCommentButton, CommentButtonsContainer, LikeCommentButton, SpinnerContainer } from '../../styles/pages/Posts';
 import Link from "next/link";
+import { useRouter } from "next/dist/client/router";
+import { api } from "services/api";
+import { FormEvent, useState } from "react";
+import { useEffect } from "react";
+import { useCallback } from "react";
+import { useAuth } from "hooks/useAuth";
+import { Spinner } from "components/Spinner";
 
+type Comment = {
+  likes: string[];
+  _id: string;
+  content: string;
+  owner: User;
+  createdAt: string;
+};
 
-const postagem = `
-<p>
-  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec nulla semper, viverra magna quis, pretium magna. Duis felis nisi, facilisis ut congue a, sagittis a turpis. In efficitur eleifend risus, ac pulvinar nibh ullamcorper a. Duis vehicula vitae sapien eget facilisis. Quisque at facilisis purus. Phasellus nec efficitur nisl. Phasellus hendrerit lectus augue, tincidunt elementum nisi faucibus in. Aenean molestie nulla a lacus aliquam, sit amet accumsan massa semper. Vestibulum scelerisque, sem commodo iaculis auctor, urna tellus laoreet odio, non vulputate dolor elit et neque. Phasellus mollis varius feugiat. Morbi maximus id est eget eleifend. Pellentesque maximus arcu non leo rutrum, et lobortis eros rutrum. Nam eget nunc iaculis, imperdiet augue gravida, auctor ligula. Nunc iaculis, quam vel finibus vehicula, neque lacus vehicula augue, in laoreet est lorem eget orci. Cras et nulla purus.
-  Nunc vel condimentum turpis, ac hendrerit dui. Ut ex metus, aliquam non volutpat sit amet, porttitor quis nisi. Ut pretium mattis fringilla. Etiam quam odio, ullamcorper id pellentesque eget, dictum vel erat. Interdum et malesuada fames ac ante ipsum primis in faucibus. Donec eu diam bibendum, tempus est vel, lobortis nisl. Aenean cursus non lacus dignissim dictum. Phasellus commodo nulla nunc, ac scelerisque tortor ultrices eu. Duis quis leo in diam iaculis malesuada sit amet aliquet turpis. Nunc nibh tortor, iaculis et risus eu, fermentum venenatis turpis.
-  Mauris vitae libero in est convallis imperdiet. Vivamus sit amet ante a arcu tincidunt sagittis. Sed vehicula, eros at molestie finibus, nisi quam porta enim, at venenatis ante diam semper metus. Sed sed purus justo. Donec vitae turpis mi. Suspendisse ac orci et nisi posuere pellentesque. Duis at lorem non metus elementum varius. Donec ut dolor nec libero dignissim viverra. Duis id arcu eu nibh imperdiet feugiat. Nulla imperdiet eleifend ligula in posuere. Nam non sollicitudin mi.
-  Donec sed enim ornare,imperdiet lacus <strong>at</strong>, semper eros. Integer sapien mauris, consectetur vitae ante non, tincidunt pellentesque augue. Sed ac eros quis erat rhoncus placerat quis nec felis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Etiam et arcu ipsum. Cras luctus nisi odio, sed vestibulum nibh luctus vitae. Integer volutpat laoreet augue nec porttitor. Praesent eget vehicula mi, at aliquet nisi. Pellentesque auctor sed felis quis consectetur. Vestibulum mattis turpis ac blandit mollis. Aliquam pulvinar nulla et orci malesuada, rhoncus ultricies nibh congue. Nam ullamcorper arcu sed metus faucibus facilisis. Nullam eu dui nulla. Cras luctus nisi risus.
-  Proin et mattis ex. Aenean ut metus commodo, iaculis enim ultrices, imperdiet metus. Sed venenatis tincidunt aliquet. Quisque lobortis tellus non nisi fringilla, nec aliquam felis placerat. Donec ac lorem ut nibh fermentum malesuada venenatis non odio. Integer fringilla lectus at neque dignissim, maximus fermentum felis volutpat. Aenean mattis lorem a augue dapibus, eget condimentum mauris tempor. Aliquam sit amet odio id est fringilla euismod. Quisque ac est placerat augue imperdiet eleifend rutrum sit amet sem. Phasellus mollis ex eget auctor tempor. Proin imperdiet mi et ex posuere, sit amet mattis augue tincidunt. Etiam porttitor scelerisque libero id viverra. Donec accumsan fringilla augue nec feugiat. Cras tristique hendrerit nunc, et mollis justo tristique et. Fusce elementum condimentum nisl non vestibulum. Suspendisse ut ante leo.
-</p>
-`;
+type User = {
+  username: string;
+  _id: string;
+};
+
+type Post = {
+  _id: string;
+  title: string;
+  content: string;
+  comments: Comment[];
+  user: User;
+  createdAt: string;
+};
 
 export default function Post() {
+  const { query, push } = useRouter();
+  const { slug } = query;
+  const [post, setPost] = useState<Post>({} as Post);
+  const [comments, setComments] = useState<Comment[]>([] as Comment[]);
+  const [textAreaData, setTextAreaData] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
+  const { user, isAuthenticated } = useAuth();
+
+  const getPost = useCallback(async () => {
+    setIsLoading(true);
+    const response = await api.get(`posts/${slug}`);
+    setPost(response.data.post);
+    setComments([...response.data.comments]);
+    setIsLoading(false);
+  }, []);
+
+  const handlePostComment = async (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!isAuthenticated) {
+      push('/');
+    }
+
+    if (textAreaData === '' || textAreaData === ' ') {
+      return;
+    }
+
+    await api.post(`/comments/${slug}`, { content: textAreaData });
+
+    const response = await api.get(`posts/${slug}`);
+
+    setComments([...response.data.comments]);
+
+    setTextAreaData('');
+  };
+
+  const handleDeleteComment = async (id: string) => {
+    await api.delete(`/comments/${slug}/${id}`);
+
+    const remainingComments = comments.filter(comment => comment._id !== id);
+
+    setComments([...remainingComments]);
+  };
+
+
+
+  const handleLikeComment = async (id: string) => {
+    setIsLikeLoading(true);
+    await api.put(`/comments/${slug}/${id}/like`);
+    setIsLikeLoading(false);
+  };
+
+  useEffect(() => {
+    if (isLikeLoading) {
+      return;
+    }
+    getPost();
+  }, [getPost, isLikeLoading]);
+
   return (
     <>
       <Head>
@@ -26,49 +106,65 @@ export default function Post() {
       </Head>
       <Header />
       <PostBodyContainer>
-        <PostHeaderContainer>
-          <PostHeaderInfoContainer>
-            <h1>Patch notes 1</h1>
-            <h4>22 de julho de 2021</h4>
-          </PostHeaderInfoContainer>
-          <Link href="/posts"><BackButton> <FiArrowLeft /> Voltar</BackButton></Link>
-        </PostHeaderContainer>
+        {isLoading ? (
+          <Spinner />
+        ) : (
+          <>
+            <PostHeaderContainer>
+              <PostHeaderInfoContainer>
+                <h1>{post.title}</h1>
+                <h4>{new Date(post.createdAt).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric'
+                })}</h4>
+                <h5>{post.user?.username}</h5>
+              </PostHeaderInfoContainer>
+              <Link href="/posts"><BackButton> <FiArrowLeft /> Voltar</BackButton></Link>
+            </PostHeaderContainer>
 
-        <PostBody dangerouslySetInnerHTML={{ __html: postagem }} />
-        <CommentContainer>
-          <Comment>
-            <CommentBody>
-              <h4>Spooky</h4>
-              <p>Muito legal o seu post amigo</p>
-            </CommentBody>
-            <button><GoTrashcan /></button>
-          </Comment>
-          <Comment>
-            <CommentBody>
-              <h4>Spooky</h4>
-              <p>Muito legal o seu post amigo</p>
-            </CommentBody>
-            <button><GoTrashcan /></button>
-          </Comment>
-          <Comment>
-            <CommentBody>
-              <h4>Spooky</h4>
-              <p>Muito legal o seu post amigo</p>
-            </CommentBody>
-            <button><GoTrashcan /></button>
-          </Comment>
-          <Comment>
-            <CommentBody>
-              <h4>Spooky</h4>
-              <p>Muito legal o seu post amigo realmente muito muito muito muito muito muito muito muito muito muito muito muito  muito muito muito massa muito </p>
-            </CommentBody>
-            <button><GoTrashcan /></button>
-          </Comment>
-          <textarea placeholder="Escreva um comentario..." cols={50} rows={2}></textarea>
-          <SendButtonContainer>
-            <button>Comentar</button>
-          </SendButtonContainer>
-        </CommentContainer>
+            <PostBody dangerouslySetInnerHTML={{ __html: post.content }} />
+            <CommentContainer>
+              {comments.length !== 0 ? (
+                comments.map(comment => (
+                  <Comment key={comment._id}>
+                    <CommentBody>
+                      <h4>{comment.owner.username}</h4>
+                      <p>{comment.content}</p>
+                    </CommentBody>
+                    <CommentButtonsContainer>
+                      {user
+                        ? comment.owner._id === user._id
+                          ? <DeleteCommentButton onClick={() => handleDeleteComment(comment._id)}><BiTrash /></DeleteCommentButton> : null : null}
+                      {isLikeLoading
+                        ? <SpinnerContainer ><ImSpinner /></SpinnerContainer>
+                        : (
+                          <LikeCommentButton onClick={() => handleLikeComment(comment._id)} >
+                            {comment.likes.some(like => like === user?._id)
+                              ? <AiFillLike />
+                              : <AiOutlineLike />}{comment.likes.length}
+                          </LikeCommentButton>
+                        )
+                      }
+                    </CommentButtonsContainer>
+                  </Comment>
+                ))
+              ) : (
+                <Comment>
+                  <CommentBody>
+                    <NoComment>Nenhum comentário no momento :(</NoComment>
+                  </CommentBody>
+                </Comment>
+              )}
+              <CommentForm onSubmit={handlePostComment} >
+                <textarea placeholder="Escreva um comentario..." value={textAreaData} onChange={e => setTextAreaData(e.currentTarget.value)} cols={50} rows={2}></textarea>
+                <SendButtonContainer>
+                  <button type='submit'>Comentar</button>
+                </SendButtonContainer>
+              </CommentForm>
+            </CommentContainer>
+          </>
+        )}
       </PostBodyContainer>
     </>
   );

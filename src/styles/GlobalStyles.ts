@@ -21,6 +21,21 @@ export default createGlobalStyle`
     color: var(--gray-50);
     overflow-x: hidden;
 
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--gray-800);
+    }
+
+    ::-webkit-scrollbar-thumb {
+
+      background: var(--yellow);
+      border-radius: 8px;
+    }
+}
+
   }
 
   a {

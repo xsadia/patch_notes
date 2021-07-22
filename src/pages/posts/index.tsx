@@ -1,12 +1,11 @@
 import { Header as MyHeader } from "components/Header";
-import { Container, PostContainer, PostInfo } from '../../styles/pages/Posts';
+import { Container, CustomUnderline, DeletePostButton, LoginButton, LoginButtonContainer, PostContainer, PostInfo, PostOuterContainer, PostOuterOuterContainer, UnderlineContainer } from '../../styles/pages/Posts';
 import Header from 'next/head';
 import Link from 'next/link';
-import { usePosts } from "services/hooks/usePosts";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { BiTrash } from 'react-icons/bi';
 import { api } from "services/api";
-import { GetServerSideProps } from "next";
-import { useInfiniteQuery } from "react-query";
+import { useAuth } from "hooks/useAuth";
 
 type User = {
   _id: string;
@@ -22,21 +21,38 @@ type Post = {
   createdAt: string;
 };
 
-type PostProps = {
-  posts: Post[];
-};
-
-export default function Posts({ posts }: PostProps) {
-  /* const [currentPage, setCurrentPage] = useState(1);
+export default function Posts() {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const { isAuthenticated, user } = useAuth();
+
+  const getPosts = useCallback(async () => {
+    const response = await api.get(`/posts?page=${currentPage}&limit=5`);
+
+    setPosts(previousPosts => [...previousPosts, ...response.data]);
+  }, [currentPage]);
+
   useEffect(() => {
-    const { data, isLoading, isFetching, error } = usePosts(currentPage);
-    setPosts((prevPosts) => [...prevPosts, ...data as Post[]]);
-  }, []); */
+    getPosts();
+  }, [getPosts]);
 
+  useEffect(() => {
+    const intersectionObserver = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        setCurrentPage((currentPage) => currentPage + 1);
+      }
+    });
 
+    intersectionObserver.observe(document.querySelector('#ward'));
+    return () => intersectionObserver.disconnect();
+  }, []);
 
-  console.log(posts, 'posts');
+  const handleDeletePost = async (id: string) => {
+    await api.delete(`/posts/${id}`);
+    const remainingPosts = posts.filter(post => post._id !== id);
+
+    setPosts([...remainingPosts]);
+  };
 
   return (
     <>
@@ -46,36 +62,47 @@ export default function Posts({ posts }: PostProps) {
         </title>
       </Header>
       <MyHeader />
-      <Container>
 
+      <Container>
+        {!isAuthenticated && (
+          <LoginButtonContainer>
+            <Link href='/'>
+              <UnderlineContainer>
+                <LoginButton>Login</LoginButton>
+                <CustomUnderline />
+              </UnderlineContainer>
+            </Link>
+          </LoginButtonContainer>
+        )}
         {posts.map(post => (
-          <Link href={`/posts/${post._id}`}>
-            <PostContainer>
+
+          <PostContainer key={post._id}>
+            <Link href={`/posts/${post._id}`} >
               <PostInfo>
                 <h1>{post.title}</h1>
                 <h3>{post.subtitle}</h3>
               </PostInfo>
-              <h4>{post.user.username}</h4>
-              <h5>{new Date(post.createdAt).toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric'
-              })}</h5>
-            </PostContainer>
-          </Link>
+            </Link>
+            <PostOuterOuterContainer>
+              <Link href={`/posts/${post._id}`} >
+                <PostOuterContainer>
+                  <h4>{post.user.username}</h4>
+                  <h5>{new Date(post.createdAt).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                  })}</h5>
+                </PostOuterContainer>
+              </Link>
+              {user?.role === 'admin' ? (
+                <DeletePostButton onClick={() => handleDeletePost(post._id)} ><BiTrash /></DeletePostButton>
+              ) : null}
+            </PostOuterOuterContainer>
+          </PostContainer>
+
         ))}
         <div id="ward" />
       </Container>
     </>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async () => {
-  const { data } = await api.get('/posts');
-
-  return {
-    props: {
-      posts: data
-    }
-  };
-};

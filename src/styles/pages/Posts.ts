@@ -74,8 +74,12 @@ export const PostHeaderContainer = styled.div`
   max-width: 960px;
   margin: 24px 0 10px 0;
   justify-content: space-between;
-
   animation: 1s ease-out 0s 1 slideFromLeft;
+
+  @media (max-width: 480px) {
+      justify-content: space-around;
+    }
+
 
   @keyframes slideFromLeft {
   0% {
@@ -94,11 +98,24 @@ export const PostHeaderInfoContainer = styled.div`
   flex-direction: column;
   h1 {
     margin-bottom: 6px;
+    @media (max-width: 480px) {
+      font-size: 24px;
+    }
+  }
+
+  h4 {
+    @media (max-width: 480px) {
+      font-size: 12px;
+    }
   }
 
   h5 {
     margin-top: 4px;
     color: var(--yellow);
+
+    @media (max-width: 480px) {
+      font-size: 10px;
+    }
   }
 `;
 
@@ -139,7 +156,11 @@ export const PostBody = styled.main`
   max-width: 960px;
 
   font-size: 18px;
-    line-height: 130%;
+  line-height: 130%;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
 
     background: var(--gray-800);
     padding: 24px;
@@ -207,6 +228,10 @@ export const BackButton = styled.button`
   display: flex;
   align-items: center;
 
+  @media (max-width: 480px) {
+      font-size: 12px;
+    }
+
   svg {
     margin-right: 5px;
   }
@@ -233,6 +258,10 @@ export const CommentContainer = styled.div`
   border-radius: 8px;
   background: var(--gray-800);
 
+  @media (max-width: 480px) {
+      max-width: 330px;
+    }
+
   animation: 1s ease-out 0s 1 slideFromLeft;
 
   @keyframes slideFromLeft {
@@ -255,10 +284,12 @@ export const Comment = styled.div`
   border-radius: 8px;
   display: flex;
   justify-content: space-between;
-
   border-bottom: 1px solid var(--gray-900);
-
   animation: 1s ease-out 0s 1 slideFromTop;
+
+  @media (max-width: 480px) {
+      font-size: 12px;
+  }
 
   @keyframes slideFromTop {
   0% {
@@ -285,6 +316,10 @@ export const CommentButtonsContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  @media (max-width: 480px) {
+    justify-content: space-around;
+    }
 `;
 
 export const LikeCommentButton = styled.button`
@@ -292,8 +327,13 @@ export const LikeCommentButton = styled.button`
   border: none;
   display: flex;
   align-items: center;
+
   color: var(--gray-50);
   transition: color 0.2s;
+
+  @media (max-width: 480px) {
+      font-size: 12px;
+    }
 
   &:hover{
     color: #3bca4e;
@@ -301,6 +341,9 @@ export const LikeCommentButton = styled.button`
 
   svg {
     font-size: 18px;
+    @media (max-width: 480px) {
+      font-size: 14px;
+    }
   }
 `;
 
@@ -338,7 +381,9 @@ export const DeleteCommentButton = styled.button`
 
     svg {
       font-size: 18px;
-
+      @media (max-width: 480px) {
+      font-size: 14px;
+    }
     }
 `;
 
@@ -471,6 +516,11 @@ export const SubmitPostButton = styled.button`
 
 export const NoComment = styled.h4`
   padding: 16px;
+
+  @media (max-width: 480px) {
+      font-size: 12px;
+      padding: 10px;
+    }
 `;
 
 export const CommentForm = styled.form`
@@ -485,6 +535,10 @@ export const CommentForm = styled.form`
     font-weight: 500;
 
     animation: 1s ease-out 0s 1 slideFromTop;
+
+    @media (max-width: 480px) {
+      font-size: 12px;
+    }
 
   @keyframes slideFromTop {
   0% {

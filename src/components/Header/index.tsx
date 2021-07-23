@@ -34,8 +34,9 @@ export function Header() {
             <>
               <UserGreeting>
                 Bem-vinde <span>{user.username}</span>
+                <LogoutButton onClick={signOut} ><IoMdLogOut /></LogoutButton>
               </UserGreeting>
-              <LogoutButton onClick={signOut} ><IoMdLogOut /></LogoutButton>
+              
             </>
           )}
         </NavContainer>
